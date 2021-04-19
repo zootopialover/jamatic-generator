@@ -19,8 +19,7 @@ export default {
       },
       author: {
         type: 'relation',
-        relation: 'User',
-        foreignKey: 'authorId'
+        relation: 'User'
       }
     }
   };

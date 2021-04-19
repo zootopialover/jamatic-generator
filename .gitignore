@@ -47,8 +47,7 @@ Session.vim
 # env
 env.yml
 .env
-
-# Jetbrains IDEs
+.vscode
 .idea
 *.code-workspace    
 /dist/*

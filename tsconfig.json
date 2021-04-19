@@ -2,8 +2,14 @@
   "compilerOptions": {
     "outDir": "dist",
     "esModuleInterop": true,
-    "lib": ["esnext"],
+    "lib": [
+      "esnext"
+    ],
     "strict": true,
     "skipLibCheck": true
-  }
+  },
+  "exclude": [
+    "source/api/graphql",
+    "destination"
+  ]
 }
