@@ -1,6 +1,7 @@
-import { Project, SourceFile } from "ts-morph";
+import { SourceFile } from "ts-morph"
+import { ModelNames } from "./model-util"
 
-const StringBuilder = require('node-stringbuilder');
+const StringBuilder = require('node-stringbuilder')
 
 
 exports.insertClientBlock = function (prismaFile: SourceFile) {
@@ -31,17 +32,12 @@ exports.insertDatabaseBlock = function (prismaFile: SourceFile) {
 
 exports.createPrismaModels = function (sourcePath: string, prismaFile: SourceFile) {
   let sb = StringBuilder.from();
-  
-  const dbSchemas = new Project();
-  dbSchemas.addSourceFilesAtPaths(sourcePath + "/*.ts");
 
-  dbSchemas.getSourceFiles().forEach((file) => {
-    console.log('Model file found : ', file.getBaseName());
-    const modelName = file.getBaseNameWithoutExtension();
-    const data = require('../../' + sourcePath + '/' + modelName);
+  for (const name of ModelNames) {
+    const data = require('../../source/api/data/' + name);
     const attributes = data.default.attributes;
 
-    sb.append('model').append(' ').append(modelName).append(' ').appendLine('{');
+    sb.append('model').append(' ').append(name).append(' ').appendLine('{');
     sb.append('id').append(' ').append('Int').append(' ').append('@id').append(' ').appendLine('@default(autoincrement())');
 
     if (data.default.skipTimestamps != undefined || data.default.skipTimestamps == false) {
@@ -51,8 +47,7 @@ exports.createPrismaModels = function (sourcePath: string, prismaFile: SourceFil
 
     for (let ele in attributes) {
       var props = attributes[ele];
-      sb.append(ele).append(' ');
-
+      sb.append(ele).append(' ');  
       switch (props.type) {
         case 'string': {
           sb.append('String');
@@ -109,12 +104,8 @@ exports.createPrismaModels = function (sourcePath: string, prismaFile: SourceFil
         }
       }
     }
-
     sb.appendLine('}');
-  });
-
-  //console.log("\nResult => ")
-  //console.log(sb.toString());
+  }
 
   prismaFile.addStatements([
     sb.toString()

@@ -7,6 +7,18 @@ const SortOrder = enumType({ name: 'SortOrder', members: ['asc', 'desc'] });
 const Query = objectType({
 name: "Query",
 definition(t) {
+t.nonNull.list.nonNull.field('allPosts', {
+    type: 'Post',
+    resolve: (_parent, _args, context: Context) => {
+        return context.prisma.Post.findMany()
+    },
+})
+t.nonNull.list.nonNull.field('allUsers', {
+    type: 'User',
+    resolve: (_parent, _args, context: Context) => {
+        return context.prisma.User.findMany()
+    },
+})
 t.nonNull.field('draftsByUser', {
   model: 'Post',
   inputs: {
@@ -68,6 +80,17 @@ t.nonNull.field('feed', {
     })
   }
 })
+t.nullable.field('findPost', {
+  type: 'Post',
+  args: {
+    id: intArg(),
+  },
+  resolve: (_parent, args, context: Context) => {
+    return context.prisma.Post.findUnique({
+      where: { id: args.id || undefined },
+    })
+  },
+})
 }
 })
 const Mutation = objectType({
@@ -97,6 +120,17 @@ t.nonNull.field('createDraft', {
       }
     })
   }
+})
+t.field('deletePost', {
+  type: 'Post',
+  args: {
+    id: nonNull(intArg()),
+  },
+  resolve: (_, args, context: Context) => {
+    return context.prisma.Post.delete({
+      where: { id: args.id },
+    })
+  },
 })
 t.nonNull.field('incrementPostViewCount', {
   model: 'Post',
@@ -179,12 +213,6 @@ t.nonNull.field('togglePublishPost', {
 })
 }
 })
-
-
-
-
-
-
 
 
 

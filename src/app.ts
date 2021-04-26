@@ -1,5 +1,5 @@
-import { Project, VariableDeclarationKind, SyntaxKind } from "ts-morph";
-
+import { Project } from "ts-morph";
+import { ModelNames, ExtractObjectName } from "./modules/model-util"
 
 const project = new Project();
 const prismaFile = project.createSourceFile('./destination/prisma/schema.prisma', '', { overwrite: true });
@@ -29,4 +29,4 @@ mutationGenerator.mergeMutations('source/api/graphql/mutations', schemaFile);
 mutationGenerator.closeMutationBlock(schemaFile);
 
 project.save();
-console.log("schema.ts file created at './destination/src/schema.ts'");
+console.log("\nschema.ts file created at './destination/src/schema.ts'");
