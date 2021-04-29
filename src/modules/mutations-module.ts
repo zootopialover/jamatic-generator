@@ -48,10 +48,14 @@ exports.mergeMutations = function (sourceDir: string, schemaFile: SourceFile) {
             if (operationMap.size == 0) {
                 console.log('Skipping unhandled file ', file.getBaseName(), ' at path : ', file.getFilePath())
             } else {
+                const objName : string = operationMap.get("model") as string
+                const objNameLowerCased : string = (operationMap.get("model") as string).toLowerCase()
                 switch (operationMap.get("type")) {
                     case OperationType.DELETE: {
                         const fileData: SourceFile = project.addSourceFileAtPath("./src/templates/mutation/deleteObject.ts")
-                        let modifiedData: string = fileData.getText().replace(/_ObjectName_/g, operationMap.get("model") as string);
+                        let modifiedData: string = fileData.getText()
+                        .replace(/_ObjectName_/g, objName)
+                        .replace(/_ObjectNameLowerCased_/g, objNameLowerCased);
                         writeToFile(schemaFile, modifiedData)
                         break;
                     }

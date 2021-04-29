@@ -68,29 +68,50 @@ t.nonNull.field('feed', {
     })
   }
 })
-t.nonNull.list.nonNull.field('allPosts', {
+t.nonNull.list.nonNull.field('getAllPost', {
     type: 'Post',
-    resolve: (_parent, _args, context: Context) => {
-        return context.prisma.Post.findMany()
+    resolve: (_parent, args, context: Context) => {
+        return context.prisma.post.findMany()
     },
 })
-t.nonNull.list.nonNull.field('allUsers', {
+t.nonNull.list.nonNull.field('getAllPostByUser', {
+    type: 'Post',
+    resolve: (_parent, args, context: Context) => {
+        return context.prisma.post.findMany({
+            where: { user: args.user || undefined },
+        })
+    },
+})
+t.nonNull.list.nonNull.field('getAllUser', {
     type: 'User',
-    resolve: (_parent, _args, context: Context) => {
-        return context.prisma.User.findMany()
+    resolve: (_parent, args, context: Context) => {
+        return context.prisma.user.findMany()
     },
 })
-t.nullable.field('findPost', {
+t.nonNull.list.nonNull.field('getAllUserByName', {
+    type: 'User',
+    resolve: (_parent, args, context: Context) => {
+        return context.prisma.user.findMany({
+            where: { name: args.name || undefined },
+        })
+    },
+})
+t.nullable.field('getPost', {
   type: 'Post',
-  args: {
-    id: intArg(),
-  },
   resolve: (_parent, args, context: Context) => {
-    return context.prisma.Post.findUnique({
+    return context.prisma.post.findUnique({
       where: { id: args.id || undefined },
     })
   },
 })
+t.nullable.field('getPostByTitle', {
+    type: 'Post',
+    resolve: (_parent, args, context: Context) => {
+      return context.prisma.post.findFirst({
+        where: { title: args.title || undefined },
+      })
+    },
+  })
 }
 })
 const Mutation = objectType({
@@ -127,7 +148,7 @@ t.field('deletePost', {
     id: nonNull(intArg()),
   },
   resolve: (_, args, context: Context) => {
-    return context.prisma.Post.delete({
+    return context.prisma.post.delete({
       where: { id: args.id },
     })
   },

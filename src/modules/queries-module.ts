@@ -49,25 +49,47 @@ exports.mergeQueries = function (sourceDir: string, schemaFile: SourceFile) {
             if (operationMap.size == 0) {
                 console.log('Skipping unhandled file ', file.getBaseName(), ' at path : ', file.getFilePath())
             } else {
+                const objName : string = operationMap.get("model") as string
+                const objNameLowerCased : string = (operationMap.get("model") as string).toLowerCase()
                 switch (operationMap.get("type")) {
                     case OperationType.GET: {
                         const fileData: SourceFile = project.addSourceFileAtPath("./src/templates/query/getObject.ts")
-                        let modifiedData: string = fileData.getText().replace(/_ObjectName_/g, operationMap.get("model") as string);
+                        let modifiedData: string = fileData.getText()
+                        .replace(/_ObjectName_/g, objName)
+                        .replace(/_ObjectNameLowerCased_/g, objNameLowerCased)
                         writeToFile(schemaFile, modifiedData)
                         break;
                     }
                     case OperationType.GET_BY: {
                         const fileData: SourceFile = project.addSourceFileAtPath("./src/templates/query/getObjectByColumn.ts")
+                        const columnName : string = operationMap.get("column") as string
+                        const columnNameLowerCased : string = (operationMap.get("column") as string).toLowerCase()
+                        let modifiedData: string = fileData.getText()
+                        .replace(/_ObjectName_/g, objName)
+                        .replace(/_ObjectNameLowerCased_/g, objNameLowerCased)
+                        .replace(/_ColumnName_/g, columnName)
+                        .replace(/_ColumnNameLowerCased_/g, columnNameLowerCased)
+                        writeToFile(schemaFile, modifiedData)
                         break;
                     }
                     case OperationType.GET_ALL: {
                         const fileData: SourceFile = project.addSourceFileAtPath("./src/templates/query/getAllObject.ts")
-                        let modifiedData: string = fileData.getText().replace(/_ObjectName_/g, operationMap.get("model") as string);
+                        let modifiedData: string = fileData.getText()
+                        .replace(/_ObjectName_/g, objName)
+                        .replace(/_ObjectNameLowerCased_/g, objNameLowerCased)
                         writeToFile(schemaFile, modifiedData)
                         break;
                     }
                     case OperationType.GET_ALL_BY: {
+                        const columnName : string = operationMap.get("column") as string
+                        const columnNameLowerCased : string = (operationMap.get("column") as string).toLowerCase()
                         const fileData: SourceFile = project.addSourceFileAtPath("./src/templates/query/getAllObjectByColumn.ts")
+                        let modifiedData: string = fileData.getText()
+                        .replace(/_ObjectName_/g, objName)
+                        .replace(/_ObjectNameLowerCased_/g, objNameLowerCased)
+                        .replace(/_ColumnName_/g, columnName)
+                        .replace(/_ColumnNameLowerCased_/g, columnNameLowerCased)
+                        writeToFile(schemaFile, modifiedData)
                         break;
                     }
                 }

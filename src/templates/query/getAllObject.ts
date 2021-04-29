@@ -1,6 +1,6 @@
-t.nonNull.list.nonNull.field('all_ObjectName_s', {
+t.nonNull.list.nonNull.field('getAll_ObjectName_', {
     type: '_ObjectName_',
-    resolve: (_parent, _args, context: Context) => {
-        return context.prisma._ObjectName_.findMany()
+    resolve: (_parent, args, context: Context) => {
+        return context.prisma._ObjectNameLowerCased_.findMany()
     },
 })

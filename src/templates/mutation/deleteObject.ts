@@ -4,7 +4,7 @@ t.field('delete_ObjectName_', {
     id: nonNull(intArg()),
   },
   resolve: (_, args, context: Context) => {
-    return context.prisma._ObjectName_.delete({
+    return context.prisma._ObjectNameLowerCased_.delete({
       where: { id: args.id },
     })
   },
