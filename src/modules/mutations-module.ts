@@ -1,5 +1,5 @@
 import { Project, SourceFile, SyntaxKind } from "ts-morph";
-import { ExtractObjectName } from "./model-util"
+import { ExtractOperationMap, OperationType } from "./model-util"
 
 const StringBuilder = require('node-stringbuilder');
 
@@ -44,16 +44,17 @@ exports.mergeMutations = function (sourceDir: string, schemaFile: SourceFile) {
         });
 
         if (fileData == undefined) {
-            const objName = ExtractObjectName(fileName);
-            if (objName != undefined) {
-                if (fileName.startsWith("delete")) {
-                    const fileData: SourceFile = project.addSourceFileAtPath("./src/templates/mutation/deleteById.ts")
-                    let modifiedData: string = fileData.getText().replace(/_ObjectName_/g, objName);
-                    writeToFile(schemaFile, modifiedData)
-                } else if (fileName.startsWith("something")) {
-                    // do something, add more blocks like this to to add automatic support for more mutation operations
-                } else {
-                    console.log('Skipping unhandled file ', file.getBaseName(), ' at path : ', file.getFilePath())
+            const operationMap = ExtractOperationMap(fileName);
+            if (operationMap.size == 0) {
+                console.log('Skipping unhandled file ', file.getBaseName(), ' at path : ', file.getFilePath())
+            } else {
+                switch (operationMap.get("type")) {
+                    case OperationType.DELETE: {
+                        const fileData: SourceFile = project.addSourceFileAtPath("./src/templates/mutation/deleteObject.ts")
+                        let modifiedData: string = fileData.getText().replace(/_ObjectName_/g, operationMap.get("model") as string);
+                        writeToFile(schemaFile, modifiedData)
+                        break;
+                    }
                 }
             }
         } else {
@@ -61,6 +62,6 @@ exports.mergeMutations = function (sourceDir: string, schemaFile: SourceFile) {
             let modifiedData: string = fileData.getText().replace(/jamatic.schema/g, 'context.prisma');
             sb.append("t.nonNull.field('" + file.getBaseNameWithoutExtension() + "', ").append(modifiedData).appendLine(')');
             writeToFile(schemaFile, sb.toString())
-    }
+        }
     });
 };

@@ -1,5 +1,5 @@
 import { Project, SourceFile, SyntaxKind } from "ts-morph"
-import { ExtractObjectName } from "./model-util"
+import { OperationType, ExtractOperationMap } from "./model-util"
 
 const StringBuilder = require('node-stringbuilder')
 const fs = require('fs')
@@ -45,23 +45,36 @@ exports.mergeQueries = function (sourceDir: string, schemaFile: SourceFile) {
         });
 
         if (fileData == undefined) {
-            const objName = ExtractObjectName(fileName);
-            if (objName != undefined) {
-                if (fileName.startsWith("all")) {
-                    const fileData: SourceFile = project.addSourceFileAtPath("./src/templates/query/findAllQuery.ts")
-                    let modifiedData: string = fileData.getText().replace(/_ObjectName_/g, objName);
-                    writeToFile(schemaFile, modifiedData)
-                } else if (fileName.startsWith("find")) {
-                    const fileData: SourceFile = project.addSourceFileAtPath("./src/templates/query/findByQuery.ts")
-                    let modifiedData: string = fileData.getText().replace(/_ObjectName_/g, objName);
-                    writeToFile(schemaFile, modifiedData)
-                } else {
-                    console.log('Skipping unhandled file ', file.getBaseName(), ' at path : ', file.getFilePath())
+            const operationMap = ExtractOperationMap(fileName)
+            if (operationMap.size == 0) {
+                console.log('Skipping unhandled file ', file.getBaseName(), ' at path : ', file.getFilePath())
+            } else {
+                switch (operationMap.get("type")) {
+                    case OperationType.GET: {
+                        const fileData: SourceFile = project.addSourceFileAtPath("./src/templates/query/getObject.ts")
+                        let modifiedData: string = fileData.getText().replace(/_ObjectName_/g, operationMap.get("model") as string);
+                        writeToFile(schemaFile, modifiedData)
+                        break;
+                    }
+                    case OperationType.GET_BY: {
+                        const fileData: SourceFile = project.addSourceFileAtPath("./src/templates/query/getObjectByColumn.ts")
+                        break;
+                    }
+                    case OperationType.GET_ALL: {
+                        const fileData: SourceFile = project.addSourceFileAtPath("./src/templates/query/getAllObject.ts")
+                        let modifiedData: string = fileData.getText().replace(/_ObjectName_/g, operationMap.get("model") as string);
+                        writeToFile(schemaFile, modifiedData)
+                        break;
+                    }
+                    case OperationType.GET_ALL_BY: {
+                        const fileData: SourceFile = project.addSourceFileAtPath("./src/templates/query/getAllObjectByColumn.ts")
+                        break;
+                    }
                 }
             }
         } else {
-            let sb = StringBuilder.from();
-            let modifiedData: string = fileData.getText().replace(/jamatic.schema/g, 'context.prisma');
+            let sb = StringBuilder.from()
+            let modifiedData: string = fileData.getText().replace(/jamatic.schema/g, 'context.prisma')
             sb.append("t.nonNull.field('" + fileName + "', ").append(modifiedData).appendLine(')')
             writeToFile(schemaFile, sb.toString())
         }

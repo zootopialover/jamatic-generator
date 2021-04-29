@@ -7,18 +7,6 @@ const SortOrder = enumType({ name: 'SortOrder', members: ['asc', 'desc'] });
 const Query = objectType({
 name: "Query",
 definition(t) {
-t.nonNull.list.nonNull.field('allPosts', {
-    type: 'Post',
-    resolve: (_parent, _args, context: Context) => {
-        return context.prisma.Post.findMany()
-    },
-})
-t.nonNull.list.nonNull.field('allUsers', {
-    type: 'User',
-    resolve: (_parent, _args, context: Context) => {
-        return context.prisma.User.findMany()
-    },
-})
 t.nonNull.field('draftsByUser', {
   model: 'Post',
   inputs: {
@@ -79,6 +67,18 @@ t.nonNull.field('feed', {
       orderBy: args.orderBy || undefined,
     })
   }
+})
+t.nonNull.list.nonNull.field('allPosts', {
+    type: 'Post',
+    resolve: (_parent, _args, context: Context) => {
+        return context.prisma.Post.findMany()
+    },
+})
+t.nonNull.list.nonNull.field('allUsers', {
+    type: 'User',
+    resolve: (_parent, _args, context: Context) => {
+        return context.prisma.User.findMany()
+    },
 })
 t.nullable.field('findPost', {
   type: 'Post',

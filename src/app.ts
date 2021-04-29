@@ -1,5 +1,6 @@
 import { Project } from "ts-morph";
-import { ModelNames, ExtractObjectName } from "./modules/model-util"
+import { ModelNames, ExtractOperationMap } from "./modules/model-util"
+
 
 const project = new Project();
 const prismaFile = project.createSourceFile('./destination/prisma/schema.prisma', '', { overwrite: true });
@@ -11,7 +12,6 @@ modelGenerator.insertDatabaseBlock(prismaFile);
 modelGenerator.createPrismaModels('source/api/data', prismaFile);
 project.save();
 console.log("schema.prisma file created at './destination/prisma/schema.prisma'\n");
-
 
 const schemaGenerator = require('./modules/schema-generator');
 schemaGenerator.insertImportStatements(schemaFile);
