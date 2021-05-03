@@ -1,6 +1,6 @@
 import { intArg, makeSchema, nonNull, objectType, stringArg, inputObjectType, arg, asNexusMethod, enumType } from "nexus";
-import DateTimeResolver from "graphql-scalars";
-import Context from "./context";
+import { DateTimeResolver } from "graphql-scalars";
+import { Context } from "./context";
 
 export const DateTime = asNexusMethod(DateTimeResolver, 'date');
 const SortOrder = enumType({ name: 'SortOrder', members: ['asc', 'desc'] });
@@ -8,56 +8,50 @@ const Query = objectType({
 name: "Query",
 definition(t) {
 t.nonNull.field('draftsByUser', {
-  model: 'Post',
-  inputs: {
-    userUniqueInput: {
-      attributes: {
-        id: 'integer',
-        email: 'string'
-      },
-      required: true
-    }
+  type: 'Post',
+  args: {
+    userUniqueInput: nonNull(
+      arg({
+        type: 'UserUniqueInput',
+      }),
+    ),
   },
-  resolve: (context, args) => {
-    return context.prisma['User'].find({
-      where: {
-        id: args.userUniqueInput.id || undefined,
-        email: args.userUniqueInput.email || undefined,
-      }
-    }).posts({
-      where: {
-        published: false,
-      },
-    });
-  }
+  resolve: (_parent, args, context: Context) => {
+    return context.prisma.user
+      .findUnique({
+        where: {
+          id: args.userUniqueInput.id || undefined,
+          email: args.userUniqueInput.email || undefined,
+        },
+      })
+      .posts({
+        where: {
+          published: false,
+        },
+      })
+  },
 })
 t.nonNull.field('feed', {
-  model: 'Post',
-  inputs: {
-    searchString: 'string',
-    skip: 'integer',
-    take: 'integer',
-    orderBy: {
-      'updatedAt': {
-        type: 'enum',
-        members: [
-          'asc',
-          'desc'
-        ]
-      }
-    }
+  type: 'Post',
+  args: {
+    searchString: stringArg(),
+    skip: intArg(),
+    take: intArg(),
+    orderBy: arg({
+      type: 'PostOrderByUpdatedAtInput',
+    }),
   },
-  resolve: (context, args) => {
+  resolve: (_parent, args, context: Context) => {
     const or = args.searchString
       ? {
-          OR: [
-            { title: { contains: args.searchString } },
-            { content: { contains: args.searchString } },
-          ],
-        }
+        OR: [
+          { title: { contains: args.searchString } },
+          { content: { contains: args.searchString } },
+        ],
+      }
       : {}
 
-    return context.prisma['Post'].findMany({
+    return context.prisma.post.findMany({
       where: {
         published: true,
         ...or,
@@ -66,7 +60,7 @@ t.nonNull.field('feed', {
       skip: args.skip || undefined,
       orderBy: args.orderBy || undefined,
     })
-  }
+  },
 })
 t.nonNull.list.nonNull.field('getAllPost', {
     type: 'Post',
@@ -118,29 +112,26 @@ const Mutation = objectType({
 name: "Mutation",
 definition(t) {
 t.nonNull.field('createDraft', {
-  model: 'Post',
-  inputs: {
-    data: {
-      title: {
-        type: 'string',
-        required: true
-      },
-      content: 'string',
-      authorEmail: {
-        type: 'string',
-        required: true
-      }
-    }
+  type: 'Post',
+  args: {
+    data: nonNull(
+      arg({
+        type: 'PostCreateInput',
+      }),
+    ),
+    authorEmail: nonNull(stringArg()),
   },
-  resolve: (context, args) => {
-    return context.prisma['Post'].create({
-      title: args.data.title,
-      content: args.data.content,
-      author: {
-        connect: { email: args.authorEmail },
-      }
+  resolve: (_, args, context: Context) => {
+    return context.prisma.post.create({
+      data: {
+        title: args.data.title,
+        content: args.data.content,
+        author: {
+          connect: { email: args.authorEmail },
+        },
+      },
     })
-  }
+  },
 })
 t.field('deletePost', {
   type: 'Post',
@@ -154,9 +145,12 @@ t.field('deletePost', {
   },
 })
 t.nonNull.field('incrementPostViewCount', {
-  model: 'Post',
-  resolve: (context, args) => {
-    return context.prisma['Post'].update({
+  type: 'Post',
+  args: {
+    id: nonNull(intArg()),
+  },
+  resolve: (_, args, context: Context) => {
+    return context.prisma.post.update({
       where: { id: args.id || undefined },
       data: {
         viewCount: {
@@ -164,78 +158,171 @@ t.nonNull.field('incrementPostViewCount', {
         },
       },
     })
-  }
+  },
 })
 t.nonNull.field('signupUser', {
-  model: 'User',
-  inputs: {
-    data: {
-      email: {
-        type: 'string',
-        required: true
-      },
-      name: 'string',
-      posts: {
-        title: {
-          type: 'string',
-          required: true
-        },
-        content: 'string'
-      }
-    }
+  type: 'User',
+  args: {
+    data: nonNull(
+      arg({
+        type: 'UserCreateInput',
+      }),
+    ),
   },
-  resolve: (context, args) => {
-    const postData = args.data.posts
-      ? args.data.posts.map((post) => {
-          return { title: post.title, content: post.content || undefined }
-        })
-      : []
-    return context.prisma['User'].create({
-      name: args.data.name,
-      email: args.data.email,
-      posts: {
-        create: postData,
-      }
-    });
-  }
+  resolve: (_, args, context: Context) => {
+    const postData = args.data.posts?.map((post) => {
+      return { title: post.title, content: post.content || undefined }
+    })
+    return context.prisma.user.create({
+      data: {
+        name: args.data.name,
+        email: args.data.email,
+        posts: {
+          create: postData,
+        },
+      },
+    })
+  },
 })
 t.nonNull.field('togglePublishPost', {
-  model: 'Post',
-  inputs: {
-    data: {
-      title: {
-        type: 'string',
-        required: true
-      },
-      content: 'string',
-      authorEmail: {
-        type: 'string',
-        required: true
-      }
-    }
+  type: 'Post',
+  args: {
+    id: nonNull(intArg()),
   },
-  resolve: (context, args) => {
-    const post = await context.prisma['Post'].findUnique({
-      where: { id: args.id || undefined },
-      select: ['published']
-    })
-
-    if (!post) {
+  resolve: async (_, args, context: Context) => {
+    try {
+      const post = await context.prisma.post.findUnique({
+        where: { id: args.id || undefined },
+        select: {
+          published: true,
+        },
+      })
+      return context.prisma.post.update({
+        where: { id: args.id || undefined },
+        data: { published: !post?.published },
+      })
+    } catch (e) {
       throw new Error(
         `Post with ID ${args.id} does not exist in the database.`,
       )
     }
-
-    return context.prisma['Post'].update({
-      where: { id: args.id || undefined },
-      data: { published: !post.published },
-    })
-  }
+  },
 })
 }
 })
 
+// following model needs to be auto generated from /source/api/data
+const User = objectType({
+  name: 'User',
+  definition(t) {
+    t.nonNull.int('id')
+    t.string('name')
+    t.nonNull.string('email')
+    t.nonNull.list.nonNull.field('posts', {
+      type: 'Post',
+      resolve: (parent, _, context: Context) => {
+        return context.prisma.user
+          .findUnique({
+            where: { id: parent.id || undefined },
+          })
+          .posts()
+      },
+    })
+  },
+})
 
+// following model needs to be auto generated from /source/api/data
+const Post = objectType({
+  name: 'Post',
+  definition(t) {
+    t.nonNull.int('id')
+    t.nonNull.field('createdAt', { type: 'DateTime' })
+    t.nonNull.field('updatedAt', { type: 'DateTime' })
+    t.nonNull.string('title')
+    t.string('content')
+    t.nonNull.boolean('published')
+    t.nonNull.int('viewCount')
+    t.field('author', {
+      type: 'User',
+      resolve: (parent, _, context: Context) => {
+        return context.prisma.post
+          .findUnique({
+            where: { id: parent.id || undefined },
+          })
+          .author()
+      },
+    })
+  },
+})
+
+
+// need to check how to auto generate this block, used in queries
+const PostOrderByUpdatedAtInput = inputObjectType({
+  name: 'PostOrderByUpdatedAtInput',
+  definition(t) {
+    t.nonNull.field('updatedAt', { type: 'SortOrder' })
+  },
+})
+
+// need to check how to auto generate this block, used in queries
+const UserUniqueInput = inputObjectType({
+  name: 'UserUniqueInput',
+  definition(t) {
+    t.int('id')
+    t.string('email')
+  },
+})
+
+// need to check how to auto generate this block, used in mutations
+const PostCreateInput = inputObjectType({
+  name: 'PostCreateInput',
+  definition(t) {
+    t.nonNull.string('title')
+    t.string('content')
+  },
+})
+
+// need to check how to auto generate this block, used in mutations
+const UserCreateInput = inputObjectType({
+  name: 'UserCreateInput',
+  definition(t) {
+    t.nonNull.string('email')
+    t.string('name')
+    t.list.nonNull.field('posts', { type: 'PostCreateInput' })
+  },
+})
+
+// this block can be probably generated using ts-morph, it is adding all constants of schema.ts
+export const schema = makeSchema({
+  types: [
+    Query,
+    Mutation,
+    Post,
+    User,
+    UserUniqueInput,
+    UserCreateInput,
+    PostCreateInput,
+    SortOrder,
+    PostOrderByUpdatedAtInput,
+    DateTime,
+  ],
+  outputs: {
+    schema: __dirname + '/../schema.graphql',
+    typegen: __dirname + '/generated/nexus.ts',
+  },
+  contextType: {
+    module: require.resolve('./context'),
+    export: 'Context',
+  },
+  sourceTypes: {
+    modules: [
+      {
+        module: '@prisma/client',
+        alias: 'prisma',
+      },
+    ],
+  },
+})
 
 
 

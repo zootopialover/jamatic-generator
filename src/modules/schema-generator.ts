@@ -18,12 +18,16 @@ exports.insertImportStatements = function (schemaFile: SourceFile) {
     })
 
     schemaFile.addImportDeclaration({
-        defaultImport: "DateTimeResolver",
+        namedImports: [
+            "DateTimeResolver"
+        ],
         moduleSpecifier: "graphql-scalars"
     })
 
     schemaFile.addImportDeclaration({
-        defaultImport: "Context",
+        namedImports: [
+            "Context"
+        ],
         moduleSpecifier: "./context"
     })
 }
