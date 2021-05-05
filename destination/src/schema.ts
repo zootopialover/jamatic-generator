@@ -210,128 +210,15 @@ t.nonNull.field('togglePublishPost', {
 })
 }
 })
-
-// following model needs to be auto generated from /source/api/data
-const User = objectType({
-  name: 'User',
-  definition(t) {
-    t.nonNull.int('id')
-    t.string('name')
-    t.nonNull.string('email')
-    t.nonNull.list.nonNull.field('posts', {
-      type: 'Post',
-      resolve: (parent, _, context: Context) => {
-        return context.prisma.user
-          .findUnique({
-            where: { id: parent.id || undefined },
-          })
-          .posts()
-      },
-    })
-  },
-})
-
-// following model needs to be auto generated from /source/api/data
-const Post = objectType({
-  name: 'Post',
-  definition(t) {
-    t.nonNull.int('id')
-    t.nonNull.field('createdAt', { type: 'DateTime' })
-    t.nonNull.field('updatedAt', { type: 'DateTime' })
-    t.nonNull.string('title')
-    t.string('content')
-    t.nonNull.boolean('published')
-    t.nonNull.int('viewCount')
-    t.field('author', {
-      type: 'User',
-      resolve: (parent, _, context: Context) => {
-        return context.prisma.post
-          .findUnique({
-            where: { id: parent.id || undefined },
-          })
-          .author()
-      },
-    })
-  },
-})
-
-
-// need to check how to auto generate this block, used in queries
-const PostOrderByUpdatedAtInput = inputObjectType({
-  name: 'PostOrderByUpdatedAtInput',
-  definition(t) {
-    t.nonNull.field('updatedAt', { type: 'SortOrder' })
-  },
-})
-
-// need to check how to auto generate this block, used in queries
-const UserUniqueInput = inputObjectType({
-  name: 'UserUniqueInput',
-  definition(t) {
-    t.int('id')
-    t.string('email')
-  },
-})
-
-// need to check how to auto generate this block, used in mutations
-const PostCreateInput = inputObjectType({
-  name: 'PostCreateInput',
-  definition(t) {
-    t.nonNull.string('title')
-    t.string('content')
-  },
-})
-
-// need to check how to auto generate this block, used in mutations
-const UserCreateInput = inputObjectType({
-  name: 'UserCreateInput',
-  definition(t) {
-    t.nonNull.string('email')
-    t.string('name')
-    t.list.nonNull.field('posts', { type: 'PostCreateInput' })
-  },
-})
-
-// this block can be probably generated using ts-morph, it is adding all constants of schema.ts
 export const schema = makeSchema({
-  types: [
+    types: [
+    DateTime,
+    SortOrder,
     Query,
     Mutation,
-    Post,
-    User,
-    UserUniqueInput,
-    UserCreateInput,
-    PostCreateInput,
-    SortOrder,
-    PostOrderByUpdatedAtInput,
-    DateTime,
-  ],
-  outputs: {
-    schema: __dirname + '/../schema.graphql',
-    typegen: __dirname + '/generated/nexus.ts',
-  },
-  contextType: {
-    module: require.resolve('./context'),
-    export: 'Context',
-  },
-  sourceTypes: {
-    modules: [
-      {
-        module: '@prisma/client',
-        alias: 'prisma',
-      },
     ],
-  },
-})
-
-
-
-
-
-
-
-
-
-
-
-
+    outputs: {schema: __dirname + '/../schema.graphql',typegen: __dirname + '/generated/nexus.ts'},
+    contextType: {module: require.resolve('./context'),export: 'Context'},
+    sourceTypes: {modules: [{module: '@prisma/client',alias: 'prisma'}]},
+    })
+;
