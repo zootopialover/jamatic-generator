@@ -4,6 +4,38 @@ import { Context } from "./context";
 
 export const DateTime = asNexusMethod(DateTimeResolver, 'date');
 const SortOrder = enumType({ name: 'SortOrder', members: ['asc', 'desc'] });
+const Post = objectType({
+name: 'Post',
+definition(t) {
+t.nonNull.int('id')
+t.nonNull.string('title')
+t.nonNull.string('content')
+t.nonNull.boolean('published')
+t.nonNull.int('viewCount')
+t.nonNull.field('author', {
+type: 'User',
+resolve: (parent, _, context: Context) => {
+return context.prisma.post.findUnique({ where: { id: parent.id || undefined }}).author()
+}
+})
+}
+})
+const User = objectType({
+name: 'User',
+definition(t) {
+t.nonNull.int('id')
+t.nonNull.field('createdAt', { type: 'DateTime' })
+t.nonNull.field('updatedAt', { type: 'DateTime' })
+t.nonNull.string('email')
+t.nonNull.string('name')
+t.nonNull.list.nonNull.field('posts', {
+type: 'Post',
+resolve: (parent, _, context: Context) => {
+return context.prisma.user.findUnique({ where: { id: parent.id || undefined }}).posts()
+}
+})
+}
+})
 const Query = objectType({
 name: "Query",
 definition(t) {
@@ -214,6 +246,8 @@ export const schema = makeSchema({
     types: [
     DateTime,
     SortOrder,
+    Post,
+    User,
     Query,
     Mutation,
     ],
