@@ -1,11 +1,8 @@
 export default {
   type: 'Post',
   args: {
-    data: nonNull(
-      arg({
-        type: 'PostCreateInput',
-      }),
-    ),
+    title: stringArg(),
+    body: stringArg(),
     authorEmail: nonNull(stringArg()),
   },
   resolve: (_, args, context: Context) => {

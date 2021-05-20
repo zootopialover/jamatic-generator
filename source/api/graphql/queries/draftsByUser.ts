@@ -1,11 +1,8 @@
 export default {
   type: 'Post',
   args: {
-    userUniqueInput: nonNull(
-      arg({
-        type: 'UserUniqueInput',
-      }),
-    ),
+    id: intArg(),
+    email: stringArg()
   },
   resolve: (_parent, args, context: Context) => {
     return jamatic.schema.user

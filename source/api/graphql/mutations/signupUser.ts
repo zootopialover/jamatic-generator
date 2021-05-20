@@ -1,11 +1,12 @@
 export default {
   type: 'User',
   args: {
-    data: nonNull(
-      arg({
-        type: 'UserCreateInput',
-      }),
-    ),
+    email: stringArg(),
+    name: stringArg(),
+    posts: {
+      title: stringArg(),
+      content: stringArg(),
+    }
   },
   resolve: (_, args, context: Context) => {
     const postData = args.data.posts?.map((post) => {
